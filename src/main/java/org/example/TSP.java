@@ -3,7 +3,6 @@ package org.example;
 
 import com.opencsv.CSVWriter;
 
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -46,70 +45,74 @@ public class TSP {
         return totalCost;
     }
 
-    public void randomSearch(int numOperations, String fileToSave){
+    public void findBestResult(int numOperations, String fileToSave, String algorithmType){
         try {
             CSVWriter writer = new CSVWriter(new FileWriter(fileToSave));
             String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "Standard Deviation"};
             writer.writeNext(headers);
 
-        var bestResult = Integer.MAX_VALUE;
-        var worstResult = Integer.MIN_VALUE;
-        var averageCost = 0;
-        var std = 0;
-        for (int i = 0; i < numOperations; i++) {
-            var randomSequence = generateRandomSequenceOfCities();
-            var currentCost = calculateCost(randomSequence);
-            averageCost += currentCost;
-            if (currentCost<bestResult) {
-                bestResult = currentCost;
-            } else if (currentCost>worstResult) {
-                worstResult = currentCost;
+            var bestResult = Integer.MAX_VALUE;
+            var worstResult = Integer.MIN_VALUE;
+            var averageCost = 0;
+            var std = 0;
+            for (int i = 0; i < numOperations; i++) {
+                List<Integer>sequence = new ArrayList<>();
+                switch (algorithmType){
+                    case "random":
+                        sequence = generateRandomSequenceOfCities();
+                        break;
+                    case "greedy":
+                        sequence = greedyAlgorithm();
+                }
+                var currentCost = calculateCost(sequence);
+                averageCost += currentCost;
+                if (currentCost<bestResult) {
+                    bestResult = currentCost;
+                } else if (currentCost>worstResult) {
+                    worstResult = currentCost;
+                }
+                String[] row = {String.valueOf(i + 1), String.valueOf(bestResult),
+                        String.valueOf(worstResult), String.valueOf(averageCost / (i + 1)),
+                        String.valueOf(std)};
+                writer.writeNext(row);
             }
-            String[] row = {String.valueOf(i + 1), String.valueOf(bestResult),
-                    String.valueOf(worstResult), String.valueOf(averageCost / (i + 1)),
-                    String.valueOf(std)};
-            writer.writeNext(row);
-        }
-        }catch (IOException e){
+        }catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void greedyAlgorithm(int numOperations, String fileToSave){
-        try {
+    public List<Integer> greedyAlgorithm(){
             var sequenceOfNeighbours = new ArrayList<Integer>();
             var listOfFreeCities = new ArrayList<Integer>();
             var random = new Random();
-
-            var writer = new CSVWriter(new FileWriter(fileToSave));
-            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "Standard Deviation"};
-            writer.writeNext(headers);
-            for (int i = 0; i < distanceMatrix.length; i++) {
-                listOfFreeCities.add(i);
+            for (int j = 0; j < distanceMatrix.length; j++) {
+                listOfFreeCities.add(j);
             }
             int firstCity = random.nextInt(listOfFreeCities.size());
             listOfFreeCities.remove(firstCity);
-            sequenceOfNeighbours.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
-            for (int i = 0; i < numOperations - 1; i++) {
+            sequenceOfNeighbours.add(firstCity);
+//          sequenceOfNeighbours.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
+            while(!listOfFreeCities.isEmpty()){
                 var bestNeighbourr = findNeighbourWithLowestCost(sequenceOfNeighbours.get(sequenceOfNeighbours.size()-1), listOfFreeCities);
-                listOfFreeCities.add(bestNeighbourr);
+                System.out.println("best neighbour: " + sequenceOfNeighbours.get(sequenceOfNeighbours.size()-1) + "neighbour" + bestNeighbourr);
+                sequenceOfNeighbours.add(bestNeighbourr);
+                listOfFreeCities.remove(bestNeighbourr);
             }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            return sequenceOfNeighbours;
     }
 
     private Integer findNeighbourWithLowestCost(int cityIndex, List<Integer> freeCities){
-        var lowestCostNeighbour = Integer.MAX_VALUE;
+        var lowestCost = Integer.MAX_VALUE;
+        var neighbourIndexWithLowestCost = 0;
         for (int i = 0; i < freeCities.size(); i++) {
             var neighbourIndex = freeCities.get(i);
             var currentCost = distanceMatrix[cityIndex][neighbourIndex];
-            if (currentCost<lowestCostNeighbour){
-                lowestCostNeighbour = neighbourIndex;
+            if (currentCost<lowestCost){
+                lowestCost = currentCost;
+                neighbourIndexWithLowestCost = neighbourIndex;
             }
         }
-        return lowestCostNeighbour;
+        return neighbourIndexWithLowestCost;
     }
 
 
