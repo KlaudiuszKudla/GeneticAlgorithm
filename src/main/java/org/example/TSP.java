@@ -62,7 +62,13 @@ public class TSP {
                         sequence = generateRandomSequenceOfCities();
                         break;
                     case "greedy":
-                        sequence = greedyAlgorithm();
+                        sequence = generateGreedySequenceOfCities();
+                        break;
+                    case "crossover":
+                        var sequence1 = generateGreedySequenceOfCities();
+                        var sequence2 = generateGreedySequenceOfCities();
+                        sequence = orderedCrossover(sequence1, sequence2);
+                        break;
                 }
                 var currentCost = calculateCost(sequence);
                 averageCost += currentCost;
@@ -81,8 +87,8 @@ public class TSP {
         }
     }
 
-    public List<Integer> greedyAlgorithm(){
-            var sequenceOfNeighbours = new ArrayList<Integer>();
+    public List<Integer> generateGreedySequenceOfCities(){
+            var sequenceOfCities = new ArrayList<Integer>();
             var listOfFreeCities = new ArrayList<Integer>();
             var random = new Random();
             for (int j = 0; j < distanceMatrix.length; j++) {
@@ -90,15 +96,15 @@ public class TSP {
             }
             int firstCity = random.nextInt(listOfFreeCities.size());
             listOfFreeCities.remove(firstCity);
-            sequenceOfNeighbours.add(firstCity);
-//          sequenceOfNeighbours.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
+            sequenceOfCities.add(firstCity);
+//          sequenceOfCities.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
             while(!listOfFreeCities.isEmpty()){
-                var bestNeighbourr = findNeighbourWithLowestCost(sequenceOfNeighbours.get(sequenceOfNeighbours.size()-1), listOfFreeCities);
-                System.out.println("best neighbour: " + sequenceOfNeighbours.get(sequenceOfNeighbours.size()-1) + "neighbour" + bestNeighbourr);
-                sequenceOfNeighbours.add(bestNeighbourr);
+                var bestNeighbourr = findNeighbourWithLowestCost(sequenceOfCities.get(sequenceOfCities.size()-1), listOfFreeCities);
+                System.out.println("best neighbour: " + sequenceOfCities.get(sequenceOfCities.size()-1) + "neighbour" + bestNeighbourr);
+                sequenceOfCities.add(bestNeighbourr);
                 listOfFreeCities.remove(bestNeighbourr);
             }
-            return sequenceOfNeighbours;
+            return sequenceOfCities;
     }
 
     private Integer findNeighbourWithLowestCost(int cityIndex, List<Integer> freeCities){
@@ -114,6 +120,61 @@ public class TSP {
         }
         return neighbourIndexWithLowestCost;
     }
+
+    public List<Integer> orderedCrossover(List<Integer> unit1, List<Integer> unit2){
+        Random rand = new Random();
+        var size = unit1.size();
+        var firstcut = rand.nextInt(size);
+        var secondCut = rand.nextInt(firstcut, size);
+        Set<Integer> freeCities = new HashSet<>();
+        freeCities.addAll(unit1);
+        for (int i = firstcut; i <= secondCut; i++) {
+            freeCities.remove(unit1.get(i));
+        }
+        var lastIndexOfUnit2 = 0;
+        if (secondCut<99){
+            for (int i = secondCut+1; i <size ; i++) {
+                lastIndexOfUnit2 = i;
+                var firstFreeCityIndex = findFirstFreeCity(freeCities, unit2, size, lastIndexOfUnit2);
+                freeCities.remove(unit2.get(firstFreeCityIndex));
+                unit1.set(i, unit2.get(firstFreeCityIndex));
+                lastIndexOfUnit2 = firstFreeCityIndex;
+            }
+        }
+        if (firstcut>0){
+            for (int i = 0; i <firstcut ; i++) {
+                lastIndexOfUnit2=i;
+                var firstFreeCityIndex = findFirstFreeCity(freeCities, unit2, size, lastIndexOfUnit2);
+                freeCities.remove(unit2.get(firstFreeCityIndex));
+                unit1.set(i, unit2.get(firstFreeCityIndex));
+                lastIndexOfUnit2 = firstFreeCityIndex;
+            }
+        }
+        return unit1;
+    }
+
+    private Integer findFirstFreeCity(Set<Integer> freeCities, List<Integer>unit2, int size, int indexUnit2){
+        Integer nextCityIndex = null;
+        for (int i = indexUnit2; i <size ; i++) {
+            var city = unit2.get(i);
+            if (freeCities.contains(city)){
+                nextCityIndex = i;
+                break;
+            }
+        }
+        if (nextCityIndex == null){
+            for (int i = 0; i <indexUnit2 ; i++) {
+                var city = unit2.get(i);
+                if (freeCities.contains(city)){
+                    nextCityIndex = i;
+                    break;
+                }
+            }
+        }
+        return nextCityIndex;
+    }
+
+
 
 
 

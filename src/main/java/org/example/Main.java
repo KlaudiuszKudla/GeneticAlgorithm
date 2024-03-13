@@ -4,9 +4,9 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        RandomDataGenerator randomDataGenerator = new RandomDataGenerator(10,100,"src/main/resources/test3.csv");
+        RandomDataGenerator randomDataGenerator = new RandomDataGenerator(500,1000,"src/main/resources/test2.csv");
         randomDataGenerator.generateRandomValues();
-        int[][] distanceMatrix = randomDataGenerator.fetchDistanceMatrix("src/main/resources/test3.csv");
+        int[][] distanceMatrix = randomDataGenerator.fetchDistanceMatrix("src/main/resources/test2.csv");
         if (distanceMatrix != null) {
             for (int[] row : distanceMatrix) {
                 for (int value : row) {
@@ -20,7 +20,6 @@ public class Main {
         System.out.println(randomSequence);
         var cost = tsp.calculateCost(randomSequence);
         System.out.println(cost);
-        tsp.findBestResult(3000000,"src/main/resources/results3.csv", "greedy" );
-//        tsp.greedyAlgorithm(100,"src/main/resources/results2.csv");
+        tsp.findBestResult(3000,"src/main/resources/results2.csv", "crossover" );
     }
 }
