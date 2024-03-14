@@ -7,10 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class TSP {
+public class TSPV2 {
 
     int[][] distanceMatrix;
-    public TSP(int[][] distanceMatrix) {
+    public TSPV2(int[][] distanceMatrix) {
         this.distanceMatrix = distanceMatrix;
     }
 
@@ -79,9 +79,8 @@ public class TSP {
         }
     }
 
-    public Map<List<Integer>, Integer> generateGreedySequenceOfCities(int size){
-//        List<Map<List<Integer>, Integer>> listOfCostOfSequences = new ArrayList<>(size);
-        Map<List<Integer>, Integer> costOfSequences = new HashMap<>();
+    public List<List<Integer>> generateGreedySequenceOfCities(int size){
+        var listOfSequences = new ArrayList<Integer>();
         var sequenceOfCities = new ArrayList<Integer>();
         var listOfFreeCities = new ArrayList<Integer>();
         var firstCity = 0;
@@ -99,8 +98,7 @@ public class TSP {
                 sequenceOfCities.add(bestNeighbourr);
                 listOfFreeCities.remove(bestNeighbourr);
             }
-            var cost = calculateCost(sequenceOfCities);
-            costOfSequences.put(sequenceOfCities, cost);
+            listOfSequences.add(sequenceOfCities);
             sequenceOfCities.clear();
             listOfFreeCities.clear();
         }
@@ -205,64 +203,68 @@ public class TSP {
         return sequenceOfCities;
     }
 
-    public Map<List<Integer>, Integer> findTournamentWinners(Map<List<Integer>, Integer> individuals, int tourSize) {
-//        List<Map<List<Integer>, Integer>> listOfBestResults = new ArrayList<>();
-        Map<List<Integer>, Integer> bestResults = new HashMap<>();
-        Iterator<Map.Entry<List<Integer>, Integer>> entryIterator = individuals.entrySet().iterator();
-        while (entryIterator.hasNext()) {
-            for (int i = 0; i < tourSize; i++) {
-                Map.Entry<List<Integer>, Integer> entry = entryIterator.next();
-                var entryKey = entry.getKey();
-                var entryValue = entry.getValue();
-                bestResults.put(entryKey, entryValue);
-            }
-            Map.Entry<List<Integer>, Integer> entry = entryIterator.next();
-            var entryKey = entry.getKey();
-            var entryValue = entry.getValue();
-            Iterator<Map.Entry<List<Integer>, Integer>> iterator = bestResults.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<List<Integer>, Integer> bestResultEntry = iterator.next();
-                if (entryValue < bestResultEntry.getValue()) {
-                    bestResults.remove(bestResultEntry.getKey());
-                    bestResults.put(entryKey, entryValue);
-                    break;
-                }
-            }
-//            listOfBestResults.add(bestResults);
+    public List<List<Integer>> findTournamentWinners(List<List<Integer>> individuals, int numberOfIndividualsInList, int tourSize) {
+        List<List<Integer>> shuffledListsOfIndividuals = new ArrayList<>();
+        Set<List<Integer>> bestResults = new HashSet<>();
+        while(bestResults.size() < tourSize) {
+            var shuffledIndividuals = shuffleList(individuals, numberOfIndividualsInList);
+            var bestResult = findBest(shuffledIndividuals);
+            bestResults.add(bestResult);
         }
-        return bestResults;
+        return new ArrayList<>(bestResults);
     }
 
-    public List<List<Integer>> findTournamentWinnersV2(List<List<Integer>> individuals, int tourSize) {
-        List<List<Integer>> randomIndividuals = new ArrayList<>(tourSize);
+    private List<Integer> findBest(List<List<Integer>> individuals){
+        List<Integer> bestResult = new ArrayList<>();
+        int bestScore = Integer.MAX_VALUE;
+        for (List<Integer> individual: individuals){
+            var score = calculateCost(individual);
+            if (score < bestScore){
+                bestScore = score;
+                bestResult = individual;
+            }
+        }
+        return bestResult;
+    }
+
+    private List<List<Integer>> shuffleList(List<List<Integer>> individuals, int quantity){
+        List<List<Integer>> randomIndividuals = new ArrayList<>(quantity);
         Collections.shuffle(individuals);
-        for (int i = 0; i < tourSize; i++) {
+        for (int i = 0; i < quantity; i++) {
             randomIndividuals.add(individuals.get(i));
         }
         return randomIndividuals;
-
     }
 
     public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize){
-        Map<List<Integer>, Integer> individuals = generateGreedySequenceOfCities(popSize);
+        List<List<Integer>> individuals = generateGreedySequenceOfCities(popSize);
         for (int i = 0; i < generations; i++) {
-        Map<List<Integer>, Integer> tournamentWinners = findTournamentWinners(individuals, tourSize);
-        List<List<Integer>> setOfTorunamentWinners = new ArrayList<>(tournamentWinners.keySet());
-            for (int j = 0; j < setOfTorunamentWinners.size(); j++) {
-                List<Integer> unit1 = setOfTorunamentWinners.get(j);
-                for (int k = j + 1; k < setOfTorunamentWinners.size(); k++) {
+            List<List<Integer>> newGeneration = new ArrayList<>();
+            List<List<Integer>> tournamentWinners = findTournamentWinners(individuals, popSize / 10, tourSize);
+            for (int j = 0; j < tournamentWinners.size(); j++) {
+                List<Integer> unit1 = tournamentWinners.get(j);
+                for (int k = j + 1; k < tournamentWinners.size(); k++) {
                     if (shouldCross(crossProbability)){
-                    List<Integer>unit2 = setOfTorunamentWinners.get(k);
-                    List<Integer> crossedUnit = orderedCrossover(unit1, unit2);
+                        List<Integer>unit2 = tournamentWinners.get(k);
+                        List<Integer> crossedUnit = orderedCrossover(unit1, unit2);
+                        if (shouldMutate(mutationProbability)){
+                            crossedUnit = swapMutation(crossedUnit);
+                        }
+                        newGeneration.add(crossedUnit);
                     }
+
                 }
+                if (shouldMutate(mutationProbability)){
+                    unit1 = swapMutation(unit1);
+                }
+                newGeneration.add(unit1);
             }
-        Iterator<Map.Entry<List<Integer>, Integer>> iterator = tournamentWinners.entrySet().iterator();
-        while(iterator.hasNext()){
+            // TODO find best results in newGeneration and remowe worse in population and add better
 
         }
-        }
     }
+
+
 
     private boolean shouldCross(int crossProbability){
         Random rand = new Random();
@@ -277,7 +279,7 @@ public class TSP {
     }
 
 
-    
+
 
 
 
