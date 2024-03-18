@@ -10,31 +10,9 @@ import java.util.*;
 public class TSPV2 {
 
     int[][] distanceMatrix;
+    List<Individual> individuals;
     public TSPV2(int[][] distanceMatrix) {
         this.distanceMatrix = distanceMatrix;
-    }
-
-    public List<Integer> generateRandomSequenceOfCities(){
-        var randomSequence = new ArrayList<Integer>();
-        for (int i = 0; i < distanceMatrix.length; i++) {
-            randomSequence.add(i);
-        }
-        Collections.shuffle(randomSequence);
-        return randomSequence;
-    }
-
-    public Integer calculateCost(List<Integer> citySequence){
-        int totalCost = 0;
-        for (int i = 0; i < citySequence.size() - 1; i++) {
-            int fromCity = citySequence.get(i);
-            int toCity = citySequence.get(i+1);
-            totalCost += distanceMatrix[fromCity][toCity];
-            System.out.println(i + ". = " + totalCost);
-        }
-        int firstCity = citySequence.get(0);
-        int lastCity = citySequence.get(citySequence.size() - 1);
-        totalCost += distanceMatrix[lastCity][firstCity];
-        return totalCost;
     }
 
     public void findBestResult(int numOperations, String fileToSave, String algorithmType){
@@ -80,7 +58,11 @@ public class TSPV2 {
     }
 
     public List<List<Integer>> generateGreedySequenceOfCities(int size){
-        var listOfSequences = new ArrayList<Integer>();
+        if (individuals == null){
+            individuals = new ArrayList<>();
+        }
+        var individual = new Individual(distanceMatrix);
+        individual.generateRandomSequenceOfCities();
         var sequenceOfCities = new ArrayList<Integer>();
         var listOfFreeCities = new ArrayList<Integer>();
         var firstCity = 0;
@@ -105,18 +87,7 @@ public class TSPV2 {
         return costOfSequences;
     }
 
-    private Integer findNeighbourIndexWithLowestCost(int cityIndex, List<Integer> freeCities){
-        var lowestCost = Integer.MAX_VALUE;
-        var neighbourIndexWithLowestCost = 0;
-        for (int neighbourIndex: freeCities) {
-            var currentCost = distanceMatrix[cityIndex][neighbourIndex];
-            if (currentCost<lowestCost){
-                lowestCost = currentCost;
-                neighbourIndexWithLowestCost = neighbourIndex;
-            }
-        }
-        return neighbourIndexWithLowestCost;
-    }
+
 
     public List<Integer> orderedCrossover(List<Integer> unit1, List<Integer> unit2){
         Random rand = new Random();

@@ -12,14 +12,15 @@ import java.util.Random;
 
 public class RandomDataGenerator {
 
+
+    private int[][] distanceMatrix;
     private int numCities;
     private int maxDistance;
-    private String fileToSave;
 
-    public RandomDataGenerator(int numCities, int maxDistance, String fileToSave) {
+
+    public RandomDataGenerator(int numCities, int maxDistance) {
         this.numCities = numCities;
         this.maxDistance = maxDistance;
-        this.fileToSave = fileToSave;
     }
 
     public void generateRandomValues(){
@@ -27,19 +28,21 @@ public class RandomDataGenerator {
         Random random = new Random();
 
         for (int i = 0; i < numCities; i++) {
-            for (int j = 0; j < numCities; j++) {
-                if(i != j) distanceMatrix[i][j] = random.nextInt(maxDistance) + 1;
+            for (int j = i+1; j < numCities; j++) {
+                var rand = random.nextInt(maxDistance) + 1;
+                distanceMatrix[i][j] = rand;
+                distanceMatrix[j][i] = rand;
             }
         }
-        saveToFile(distanceMatrix);
+        this.distanceMatrix = distanceMatrix;
     }
 
-    private void saveToFile(int[][] distanceMatrix){
+    public void saveToFile(String fileToSave){
         try(CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
             for (int i = 0; i < numCities; i++) {
                 String[] line = new String[numCities];
                 for (int j = 0; j < numCities; j++) {
-                    line[j] = String.valueOf(distanceMatrix[i][j]);
+                    line[j] = String.valueOf(this.distanceMatrix[i][j]);
                 }
                 writer.writeNext(line);
             }
