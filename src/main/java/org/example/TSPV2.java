@@ -1,21 +1,19 @@
 package org.example;
 
 
-import com.opencsv.CSVWriter;
-
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 public class TSPV2 {
 
-    int[][] distanceMatrix;
-    List<Individual> individuals;
+    private int[][] distanceMatrix;
+    private List<Individual> individuals;
+    private int size;
     public TSPV2(int[][] distanceMatrix) {
         this.distanceMatrix = distanceMatrix;
+        this.size = distanceMatrix.length;
     }
 
-    private void generateGreedySequenceOfCities(int size){
+    private void generateGreedySequenceOfCities(){
         if (individuals == null){
             individuals = new ArrayList<>();
         }
@@ -115,7 +113,7 @@ public class TSPV2 {
         List<List<Integer>> shuffledListsOfIndividuals = new ArrayList<>();
         Set<List<Integer>> bestResults = new HashSet<>();
         while(bestResults.size() < tourSize) {
-            var shuffledIndividuals = shuffleList(individuals, numberOfIndividualsInList);
+            var shuffledIndividuals = shuffleIndividuals(individuals, numberOfIndividualsInList);
             var bestResult = findBest(shuffledIndividuals);
             bestResults.add(bestResult);
         }
@@ -135,18 +133,34 @@ public class TSPV2 {
         return bestResult;
     }
 
-    private List<List<Integer>> shuffleList(List<List<Integer>> individuals, int quantity){
-        List<List<Integer>> randomIndividuals = new ArrayList<>(quantity);
-        Collections.shuffle(individuals);
-        for (int i = 0; i < quantity; i++) {
-            randomIndividuals.add(individuals.get(i));
+    private List<Individual> shuffleIndividuals(List<Individual> individuals, int size){
+        Random rand = new Random();
+        List<Individual> newIndividuals =  new ArrayList<>();
+        for (int i = size-1; i >= 0 ; i++) {
+            int j = rand.nextInt(i+1);
+            swapIndividuals(i, j);
         }
-        return randomIndividuals;
+        for (int i = 0; i < size; i++) {
+            newIndividuals.add(individuals.get(i));
+        }
+        return newIndividuals;
     }
 
+    private List<Individual> swapIndividuals(int firstIndex, int secondIndex){
+        Individual individual = individuals.get(firstIndex);
+        individuals.set(firstIndex, individuals.get(secondIndex));
+        individuals.set(secondIndex, individual);
+        return individuals;
+    }
+
+    private List<Individual> createPopulation
+
+
     public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize){
-        generateGreedySequenceOfCities(popSize);
+        generateGreedySequenceOfCities();
+        List<Individual> population = shuffleIndividuals(this.individuals,popSize);
         for (int i = 0; i < generations; i++) {
+            List<Individual> tournamentParticipants = shuffleIndividuals(population, tourSize);
             List<List<Integer>> newGeneration = new ArrayList<>();
             List<List<Integer>> tournamentWinners = findTournamentWinners(individuals, popSize / 10, tourSize);
             for (int j = 0; j < tournamentWinners.size(); j++) {
