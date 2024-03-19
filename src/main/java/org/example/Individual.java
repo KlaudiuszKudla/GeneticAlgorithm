@@ -22,31 +22,25 @@ public class Individual implements IIndividual {
         Collections.shuffle(sequenceOfCities);
     }
 
-    public void generateGreedySequenceOfCities(){
+    public void generateGreedySequenceOfCities(int firstCity){
+        var listOfFreeCities = new ArrayList<Integer>();
         if (sequenceOfCities == null){
             sequenceOfCities = new ArrayList<>(size);
         }
-        var listOfFreeCities = new ArrayList<Integer>();
-        var firstCity = 0;
-        for (int i = 0; i < size; i++) {
-            firstCity = i;
-            for (int j = 0; j < size; j++) {
-                listOfFreeCities.add(j);
-            }
-            listOfFreeCities.remove(firstCity);
-            sequenceOfCities.add(firstCity);
-            while(!listOfFreeCities.isEmpty()){
-                var bestNeighbourr = findNeighbourIndexWithLowestCost(sequenceOfCities.get(sequenceOfCities.size()-1), listOfFreeCities);
-                System.out.println("best neighbour: " + sequenceOfCities.get(sequenceOfCities.size()-1) + "neighbour" + bestNeighbourr);
+        for (int j = 0; j < size; j++) {
+            listOfFreeCities.add(j);
+        }
+        listOfFreeCities.remove(firstCity);
+        sequenceOfCities.add(firstCity);
+        while(!listOfFreeCities.isEmpty()){
+            var lastCity = sequenceOfCities.get(sequenceOfCities.size()-1);
+            var bestNeighbourr = findNeighbourIndexWithLowestCost(lastCity, listOfFreeCities);
                 sequenceOfCities.add(bestNeighbourr);
                 listOfFreeCities.remove(bestNeighbourr);
             }
-            listOfSequences.add(sequenceOfCities);
             sequenceOfCities.clear();
             listOfFreeCities.clear();
         }
-        return costOfSequences;
-    }
 
     private Integer findNeighbourIndexWithLowestCost(int cityIndex, List<Integer> freeCities){
         var lowestCost = Integer.MAX_VALUE;

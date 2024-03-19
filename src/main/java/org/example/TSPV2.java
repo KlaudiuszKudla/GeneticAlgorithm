@@ -15,79 +15,16 @@ public class TSPV2 {
         this.distanceMatrix = distanceMatrix;
     }
 
-    public void findBestResult(int numOperations, String fileToSave, String algorithmType){
-        try {
-            CSVWriter writer = new CSVWriter(new FileWriter(fileToSave));
-            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "Standard Deviation"};
-            writer.writeNext(headers);
-
-            var bestResult = Integer.MAX_VALUE;
-            var worstResult = Integer.MIN_VALUE;
-            var averageCost = 0;
-            var std = 0;
-            for (int i = 0; i < numOperations; i++) {
-                List<Integer>sequence = new ArrayList<>();
-                switch (algorithmType){
-                    case "random":
-                        sequence = generateRandomSequenceOfCities();
-                        break;
-                    case "greedy":
-                        sequence = generateGreedySequenceOfCities();
-                        break;
-                    case "crossover":
-                        var sequence1 = generateGreedySequenceOfCities();
-                        var sequence2 = generateGreedySequenceOfCities();
-                        sequence = orderedCrossover(sequence1, sequence2);
-                        break;
-                }
-                var currentCost = calculateCost(sequence);
-                averageCost += currentCost;
-                if (currentCost<bestResult) {
-                    bestResult = currentCost;
-                } else if (currentCost>worstResult) {
-                    worstResult = currentCost;
-                }
-                String[] row = {String.valueOf(i + 1), String.valueOf(bestResult),
-                        String.valueOf(worstResult), String.valueOf(averageCost / (i + 1)),
-                        String.valueOf(std)};
-                writer.writeNext(row);
-            }
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public List<List<Integer>> generateGreedySequenceOfCities(int size){
+    private void generateGreedySequenceOfCities(int size){
         if (individuals == null){
             individuals = new ArrayList<>();
         }
-        var individual = new Individual(distanceMatrix);
-        individual.generateRandomSequenceOfCities();
-        var sequenceOfCities = new ArrayList<Integer>();
-        var listOfFreeCities = new ArrayList<Integer>();
-        var firstCity = 0;
         for (int i = 0; i < size; i++) {
-            firstCity = i;
-            for (int j = 0; j < size; j++) {
-                listOfFreeCities.add(j);
-            }
-            listOfFreeCities.remove(firstCity);
-            sequenceOfCities.add(firstCity);
-//          sequenceOfCities.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
-            while(!listOfFreeCities.isEmpty()){
-                var bestNeighbourr = findNeighbourIndexWithLowestCost(sequenceOfCities.get(sequenceOfCities.size()-1), listOfFreeCities);
-                System.out.println("best neighbour: " + sequenceOfCities.get(sequenceOfCities.size()-1) + "neighbour" + bestNeighbourr);
-                sequenceOfCities.add(bestNeighbourr);
-                listOfFreeCities.remove(bestNeighbourr);
-            }
-            listOfSequences.add(sequenceOfCities);
-            sequenceOfCities.clear();
-            listOfFreeCities.clear();
+            Individual individual = new Individual(distanceMatrix);
+            individual.generateGreedySequenceOfCities(i);
+            individuals.add(individual);
         }
-        return costOfSequences;
     }
-
-
 
     public List<Integer> orderedCrossover(List<Integer> unit1, List<Integer> unit2){
         Random rand = new Random();
@@ -174,7 +111,7 @@ public class TSPV2 {
         return sequenceOfCities;
     }
 
-    public List<List<Integer>> findTournamentWinners(List<List<Integer>> individuals, int numberOfIndividualsInList, int tourSize) {
+    public List<List<Integer>> findTournamentWinners(List<Individual> individuals, int numberOfIndividualsInList, int tourSize) {
         List<List<Integer>> shuffledListsOfIndividuals = new ArrayList<>();
         Set<List<Integer>> bestResults = new HashSet<>();
         while(bestResults.size() < tourSize) {
@@ -208,7 +145,7 @@ public class TSPV2 {
     }
 
     public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize){
-        List<List<Integer>> individuals = generateGreedySequenceOfCities(popSize);
+        generateGreedySequenceOfCities(popSize);
         for (int i = 0; i < generations; i++) {
             List<List<Integer>> newGeneration = new ArrayList<>();
             List<List<Integer>> tournamentWinners = findTournamentWinners(individuals, popSize / 10, tourSize);
