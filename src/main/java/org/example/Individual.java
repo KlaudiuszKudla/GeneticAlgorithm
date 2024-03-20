@@ -20,6 +20,7 @@ public class Individual implements IIndividual {
             sequenceOfCities.add(i);
         }
         Collections.shuffle(sequenceOfCities);
+        calculateCost();
     }
 
     public void generateGreedySequenceOfCities(int firstCity){
@@ -38,8 +39,7 @@ public class Individual implements IIndividual {
                 sequenceOfCities.add(bestNeighbourr);
                 listOfFreeCities.remove(bestNeighbourr);
             }
-            sequenceOfCities.clear();
-            listOfFreeCities.clear();
+        calculateCost();
         }
 
     private Integer findNeighbourIndexWithLowestCost(int cityIndex, List<Integer> freeCities){
@@ -59,9 +59,8 @@ public class Individual implements IIndividual {
         int totalCost = 0;
         for (int i = 0; i < sequenceOfCities.size() - 1; i++) {
             int fromCity = sequenceOfCities.get(i);
-            int toCity = sequenceOfCities.get(i+1);
+            int toCity = sequenceOfCities.get((i+1) % size);
             totalCost += distanceMatrix[fromCity][toCity];
-            System.out.println(i + ". = " + totalCost);
         }
         int firstCity = sequenceOfCities.get(0);
         int lastCity = sequenceOfCities.get(sequenceOfCities.size() - 1);
@@ -94,10 +93,19 @@ public class Individual implements IIndividual {
 
     public void setSequenceOfCities(List<Integer> sequenceOfCities) {
         this.sequenceOfCities = sequenceOfCities;
+        calculateCost();
     }
 
     public int getCost() {
         return cost;
+    }
+
+    public int[][] getDistanceMatrix() {
+        return distanceMatrix;
+    }
+
+    public int getSize() {
+        return size;
     }
 
     public void setCost(int cost) {

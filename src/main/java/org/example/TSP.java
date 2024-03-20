@@ -9,148 +9,73 @@ import java.util.*;
 
 public class TSP {
 
-    int[][] distanceMatrix;
+    private int[][] distanceMatrix;
+    private List<Individual> individuals;
+    private int size;
     public TSP(int[][] distanceMatrix) {
         this.distanceMatrix = distanceMatrix;
+        this.size = distanceMatrix.length;
     }
 
-    public List<Integer> generateRandomSequenceOfCities(){
-        var randomSequence = new ArrayList<Integer>();
-        for (int i = 0; i < distanceMatrix.length; i++) {
-            randomSequence.add(i);
+    private void generateGreedySequenceOfCities(){
+        if (individuals == null){
+            individuals = new ArrayList<>();
         }
-        Collections.shuffle(randomSequence);
-        return randomSequence;
-    }
-
-    public Integer calculateCost(List<Integer> citySequence){
-        int totalCost = 0;
-        for (int i = 0; i < citySequence.size() - 1; i++) {
-            int fromCity = citySequence.get(i);
-            int toCity = citySequence.get(i+1);
-            totalCost += distanceMatrix[fromCity][toCity];
-            System.out.println(i + ". = " + totalCost);
-        }
-        int firstCity = citySequence.get(0);
-        int lastCity = citySequence.get(citySequence.size() - 1);
-        totalCost += distanceMatrix[lastCity][firstCity];
-        return totalCost;
-    }
-
-    public void findBestResult(int numOperations, String fileToSave, String algorithmType){
-        try {
-            CSVWriter writer = new CSVWriter(new FileWriter(fileToSave));
-            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "Standard Deviation"};
-            writer.writeNext(headers);
-
-            var bestResult = Integer.MAX_VALUE;
-            var worstResult = Integer.MIN_VALUE;
-            var averageCost = 0;
-            var std = 0;
-            for (int i = 0; i < numOperations; i++) {
-                List<Integer>sequence = new ArrayList<>();
-                switch (algorithmType){
-                    case "random":
-                        sequence = generateRandomSequenceOfCities();
-                        break;
-                    case "greedy":
-                        sequence = generateGreedySequenceOfCities();
-                        break;
-                    case "crossover":
-                        var sequence1 = generateGreedySequenceOfCities();
-                        var sequence2 = generateGreedySequenceOfCities();
-                        sequence = orderedCrossover(sequence1, sequence2);
-                        break;
-                }
-                var currentCost = calculateCost(sequence);
-                averageCost += currentCost;
-                if (currentCost<bestResult) {
-                    bestResult = currentCost;
-                } else if (currentCost>worstResult) {
-                    worstResult = currentCost;
-                }
-                String[] row = {String.valueOf(i + 1), String.valueOf(bestResult),
-                        String.valueOf(worstResult), String.valueOf(averageCost / (i + 1)),
-                        String.valueOf(std)};
-                writer.writeNext(row);
-            }
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Map<List<Integer>, Integer> generateGreedySequenceOfCities(int size){
-//        List<Map<List<Integer>, Integer>> listOfCostOfSequences = new ArrayList<>(size);
-        Map<List<Integer>, Integer> costOfSequences = new HashMap<>();
-        var sequenceOfCities = new ArrayList<Integer>();
-        var listOfFreeCities = new ArrayList<Integer>();
-        var firstCity = 0;
         for (int i = 0; i < size; i++) {
-            firstCity = i;
-            for (int j = 0; j < size; j++) {
-                listOfFreeCities.add(j);
-            }
-            listOfFreeCities.remove(firstCity);
-            sequenceOfCities.add(firstCity);
-//          sequenceOfCities.add(findNeighbourWithLowestCost(firstCity,listOfFreeCities));
-            while(!listOfFreeCities.isEmpty()){
-                var bestNeighbourr = findNeighbourIndexWithLowestCost(sequenceOfCities.get(sequenceOfCities.size()-1), listOfFreeCities);
-                System.out.println("best neighbour: " + sequenceOfCities.get(sequenceOfCities.size()-1) + "neighbour" + bestNeighbourr);
-                sequenceOfCities.add(bestNeighbourr);
-                listOfFreeCities.remove(bestNeighbourr);
-            }
-            var cost = calculateCost(sequenceOfCities);
-            costOfSequences.put(sequenceOfCities, cost);
-            sequenceOfCities.clear();
-            listOfFreeCities.clear();
+            Individual individual = new Individual(distanceMatrix);
+            individual.generateGreedySequenceOfCities(i);
+            individuals.add(individual);
         }
-        return costOfSequences;
+    }
+    private void generateRandomSequenceOfCities(){
+        if (individuals == null){
+            individuals = new ArrayList<>();
+        }
+        for (int i = 0; i < size; i++) {
+            Individual individual = new Individual(distanceMatrix);
+            individual.generateRandomSequenceOfCities();
+            individuals.add(individual);
+        }
     }
 
-    private Integer findNeighbourIndexWithLowestCost(int cityIndex, List<Integer> freeCities){
-        var lowestCost = Integer.MAX_VALUE;
-        var neighbourIndexWithLowestCost = 0;
-        for (int neighbourIndex: freeCities) {
-            var currentCost = distanceMatrix[cityIndex][neighbourIndex];
-            if (currentCost<lowestCost){
-                lowestCost = currentCost;
-                neighbourIndexWithLowestCost = neighbourIndex;
-            }
-        }
-        return neighbourIndexWithLowestCost;
-    }
-
-    public List<Integer> orderedCrossover(List<Integer> unit1, List<Integer> unit2){
+    public Individual orderedCrossover(Individual unit1, Individual unit2){
         Random rand = new Random();
-        var size = unit1.size();
+        var sequenceOfCities = unit1.getSequenceOfCities();
+        var sequenceOfCities2 = unit2.getSequenceOfCities();
+        var size = sequenceOfCities.size();
         var firstcut = rand.nextInt(size);
         var secondCut = rand.nextInt(firstcut, size);
-        Set<Integer> freeCities = new HashSet<>();
-        freeCities.addAll(unit1);
+        Set<Integer> freeCities = new HashSet<>(sequenceOfCities);
         for (int i = firstcut; i <= secondCut; i++) {
-            freeCities.remove(unit1.get(i));
+            freeCities.remove(sequenceOfCities.get(i));
         }
         var lastIndexOfUnit2 = 0;
-        if (secondCut<99){
+        if (secondCut<size-1){
             for (int i = secondCut+1; i <size ; i++) {
                 lastIndexOfUnit2 = i;
-                var firstFreeCityIndex = findFirstFreeCity(freeCities, unit2, size, lastIndexOfUnit2);
-                freeCities.remove(unit2.get(firstFreeCityIndex));
-                unit1.set(i, unit2.get(firstFreeCityIndex));
+                var firstFreeCityIndex = findFirstFreeCity(freeCities, sequenceOfCities2, size, lastIndexOfUnit2);
+                var city = sequenceOfCities2.get(firstFreeCityIndex);
+                freeCities.remove(city);
+                sequenceOfCities.set(i, city);
                 lastIndexOfUnit2 = firstFreeCityIndex;
             }
         }
         if (firstcut>0){
             for (int i = 0; i <firstcut ; i++) {
                 lastIndexOfUnit2=i;
-                var firstFreeCityIndex = findFirstFreeCity(freeCities, unit2, size, lastIndexOfUnit2);
-                freeCities.remove(unit2.get(firstFreeCityIndex));
-                unit1.set(i, unit2.get(firstFreeCityIndex));
+                var firstFreeCityIndex = findFirstFreeCity(freeCities, sequenceOfCities2, size, lastIndexOfUnit2);
+                var city = sequenceOfCities2.get(firstFreeCityIndex);
+                freeCities.remove(city);
+                sequenceOfCities.set(i, city);
                 lastIndexOfUnit2 = firstFreeCityIndex;
             }
         }
+        unit1.setSequenceOfCities(sequenceOfCities);
+        unit1.calculateCost();
         return unit1;
     }
+
+
 
     private Integer findFirstFreeCity(Set<Integer> freeCities, List<Integer>unit2, int size, int indexUnit2){
         Integer nextCityIndex = null;
@@ -173,7 +98,8 @@ public class TSP {
         return nextCityIndex;
     }
 
-    private List<Integer> swapMutation(List<Integer> sequenceOfCitites){
+    private Individual swapMutation(Individual individual){
+        var sequenceOfCitites = individual.getSequenceOfCities();
         var sizeOfList = sequenceOfCitites.size();
         var random = new Random();
         var firstIndex = random.nextInt(sizeOfList);
@@ -184,11 +110,14 @@ public class TSP {
         var firstCity = sequenceOfCitites.get(firstIndex);
         sequenceOfCitites.set(firstIndex, sequenceOfCitites.get(secondIndex));
         sequenceOfCitites.set(secondIndex, firstCity);
-        return sequenceOfCitites;
+        individual.setSequenceOfCities(sequenceOfCitites);
+        individual.calculateCost();
+        return individual;
     }
 
-    private List<Integer> inversionMutation(List<Integer> sequenceOfCities){
-        var sizeOfList = sequenceOfCities.size();
+    private List<Integer> inversionMutation(Individual individual){
+        var sequenceOfCities = individual.getSequenceOfCities();
+        var sizeOfList = individual.getSize();
         var random = new Random();
         var firstIndex = random.nextInt(sizeOfList);
         var secondIndex = random.nextInt(sizeOfList);
@@ -205,64 +134,126 @@ public class TSP {
         return sequenceOfCities;
     }
 
-    public Map<List<Integer>, Integer> findTournamentWinners(Map<List<Integer>, Integer> individuals, int tourSize) {
-//        List<Map<List<Integer>, Integer>> listOfBestResults = new ArrayList<>();
-        Map<List<Integer>, Integer> bestResults = new HashMap<>();
-        Iterator<Map.Entry<List<Integer>, Integer>> entryIterator = individuals.entrySet().iterator();
-        while (entryIterator.hasNext()) {
-            for (int i = 0; i < tourSize; i++) {
-                Map.Entry<List<Integer>, Integer> entry = entryIterator.next();
-                var entryKey = entry.getKey();
-                var entryValue = entry.getValue();
-                bestResults.put(entryKey, entryValue);
-            }
-            Map.Entry<List<Integer>, Integer> entry = entryIterator.next();
-            var entryKey = entry.getKey();
-            var entryValue = entry.getValue();
-            Iterator<Map.Entry<List<Integer>, Integer>> iterator = bestResults.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<List<Integer>, Integer> bestResultEntry = iterator.next();
-                if (entryValue < bestResultEntry.getValue()) {
-                    bestResults.remove(bestResultEntry.getKey());
-                    bestResults.put(entryKey, entryValue);
-                    break;
-                }
-            }
-//            listOfBestResults.add(bestResults);
+    public List<Individual> findTournamentWinners(List<Individual> population, int times, int tourSize) {
+        Set<Individual> bestResults = new HashSet<>();
+        while(bestResults.size() < tourSize) {
+            List<Individual> tournamentParticipants = shuffleIndividuals(population, times);
+            var bestResult = findBestIndividual(tournamentParticipants);
+            bestResults.add(bestResult);
         }
-        return bestResults;
+        return new ArrayList<>(bestResults);
     }
 
-    public List<List<Integer>> findTournamentWinnersV2(List<List<Integer>> individuals, int tourSize) {
-        List<List<Integer>> randomIndividuals = new ArrayList<>(tourSize);
+    private Individual findBestIndividual(List<Individual> individuals){
+        Individual bestResult = new Individual();
+        int bestScore = Integer.MAX_VALUE;
+        for (Individual individual: individuals){
+            var score = individual.getCost();
+            if (score < bestScore){
+                bestScore = score;
+                bestResult = individual;
+            }
+        }
+        return bestResult;
+    }
+    private Individual findWorstIndividual(List<Individual> individuals){
+        Individual worstResult = new Individual();
+        var worstScore = 0;
+        for (Individual individual: individuals){
+            var currentCost = individual.getCost();
+            if (currentCost > worstScore){
+                worstScore = currentCost;
+                worstResult = individual;
+            }
+        }
+        return worstResult;
+    }
+
+    private Integer getAverageCost(List<Individual> individuals){
+        var averageCost = 0;
+        for (Individual individual: individuals){
+            averageCost += individual.getCost();
+        }
+        return averageCost;
+    }
+
+    private List<Individual> shuffleIndividuals(List<Individual> individuals, int sizeOfResults){
         Collections.shuffle(individuals);
-        for (int i = 0; i < tourSize; i++) {
-            randomIndividuals.add(individuals.get(i));
+        List<Individual> shuffledIndividuals = new ArrayList<>(sizeOfResults);
+        for (int i = 0; i < sizeOfResults; i++) {
+            shuffledIndividuals.add(individuals.get(i));
         }
-        return randomIndividuals;
-
+        return shuffledIndividuals;
     }
 
-    public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize){
-        Map<List<Integer>, Integer> individuals = generateGreedySequenceOfCities(popSize);
-        for (int i = 0; i < generations; i++) {
-        Map<List<Integer>, Integer> tournamentWinners = findTournamentWinners(individuals, tourSize);
-        List<List<Integer>> setOfTorunamentWinners = new ArrayList<>(tournamentWinners.keySet());
-            for (int j = 0; j < setOfTorunamentWinners.size(); j++) {
-                List<Integer> unit1 = setOfTorunamentWinners.get(j);
-                for (int k = j + 1; k < setOfTorunamentWinners.size(); k++) {
-                    if (shouldCross(crossProbability)){
-                    List<Integer>unit2 = setOfTorunamentWinners.get(k);
-                    List<Integer> crossedUnit = orderedCrossover(unit1, unit2);
-                    }
-                }
+    private List<Individual> swapIndividuals(int firstIndex, int secondIndex){
+        Individual individual = individuals.get(firstIndex);
+        individuals.set(firstIndex, individuals.get(secondIndex));
+        individuals.set(secondIndex, individual);
+        return individuals;
+    }
+
+
+    public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize, String fileToSave){
+        try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
+            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost"};
+            writer.writeNext(headers);
+            generateRandomSequenceOfCities();
+            List<Individual> population = shuffleIndividuals(this.individuals,popSize);
+            for (int i = 0; i < generations; i++) {
+                List<Individual> tournamentWinners = findTournamentWinners(population,popSize/10, tourSize);
+                crossTournamentWinners(tournamentWinners, crossProbability, population);
+                mutatePopulation(population, mutationProbability);
+                var currentBestIndividual = findBestIndividual(population);
+                var worstResult = findWorstIndividual(population).getCost();
+                var averageCost = getAverageCost(population);
+                String[] row = {String.valueOf(i+1), String.valueOf(currentBestIndividual.getCost()), String.valueOf(worstResult), String.valueOf(averageCost/popSize)};
+                writer.writeNext(row);
             }
-        Iterator<Map.Entry<List<Integer>, Integer>> iterator = tournamentWinners.entrySet().iterator();
-        while(iterator.hasNext()){
-
-        }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
+    public void crossTournamentWinners(List<Individual> tournamentWinners, int crossProbability, List<Individual> population){
+        for (int j = 0; j < tournamentWinners.size() - 1; j += 2) {
+            Individual parent1 = tournamentWinners.get(j);
+            Individual parent2 = tournamentWinners.get(j + 1);
+            if (shouldCross(crossProbability)) {
+                Individual child1 = orderedCrossover(parent1, parent2);
+                if (parent1.getCost() < parent2.getCost()){
+                population.remove(parent2);
+                }else{
+                population.remove(parent1);
+                }
+                population.add(child1);
+            }
+        }
+    }
+
+    public void mutatePopulation(List<Individual> population, int mutationProbability){
+        for (Individual individual: population){
+            if (shouldMutate(mutationProbability)){
+                inversionMutation(individual);
+            }
+        }
+    }
+
+    public void saveResults(List<Individual> individuals, String filetoSave){
+        try {
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(filetoSave));
+            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "Standard Deviation"};
+            csvWriter.writeNext(headers);
+            var bestResult = Integer.MAX_VALUE;
+            var worstResult = Integer.MIN_VALUE;
+            var averageCost = 0;
+            var std = 0;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     private boolean shouldCross(int crossProbability){
         Random rand = new Random();
@@ -277,10 +268,27 @@ public class TSP {
     }
 
 
-    
+    public int[][] getDistanceMatrix() {
+        return distanceMatrix;
+    }
 
+    public void setDistanceMatrix(int[][] distanceMatrix) {
+        this.distanceMatrix = distanceMatrix;
+    }
 
+    public List<Individual> getIndividuals() {
+        return individuals;
+    }
 
+    public void setIndividuals(List<Individual> individuals) {
+        this.individuals = individuals;
+    }
 
+    public int getSize() {
+        return size;
+    }
 
+    public void setSize(int size) {
+        this.size = size;
+    }
 }
