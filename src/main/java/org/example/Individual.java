@@ -5,6 +5,7 @@ import org.example.interfaces.IIndividual;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class Individual implements IIndividual {
     private List<Integer> sequenceOfCities;
@@ -66,6 +67,23 @@ public class Individual implements IIndividual {
         int lastCity = sequenceOfCities.get(sequenceOfCities.size() - 1);
         totalCost += distanceMatrix[lastCity][firstCity];
         this.cost = totalCost;
+    }
+
+    public Individual swapMutation(){
+        var random = new Random();
+        List<Integer> sequence = this.sequenceOfCities;
+        var firstIndex = random.nextInt(size);
+        var secondIndex = random.nextInt(size);
+        while(firstIndex == secondIndex){
+            secondIndex = random.nextInt(size);
+        }
+        Individual mutant = new Individual(distanceMatrix);
+        var firstCity = this.sequenceOfCities.get(firstIndex);
+        sequence.set(firstIndex, sequenceOfCities.get(secondIndex));
+        sequence.set(secondIndex, firstCity);
+        mutant.setSequenceOfCities(sequence);
+        mutant.calculateCost();
+        return mutant;
     }
 
     public Individual(List<Integer> sequenceOfCities, int cost, int[][] distanceMatrix) {

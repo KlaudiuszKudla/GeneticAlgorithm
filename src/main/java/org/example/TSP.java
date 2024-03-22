@@ -98,22 +98,7 @@ public class TSP {
         return nextCityIndex;
     }
 
-    private Individual swapMutation(Individual individual){
-        var sequenceOfCitites = individual.getSequenceOfCities();
-        var sizeOfList = sequenceOfCitites.size();
-        var random = new Random();
-        var firstIndex = random.nextInt(sizeOfList);
-        var secondIndex = random.nextInt(sizeOfList);
-        while(firstIndex == secondIndex){
-            secondIndex = random.nextInt(sizeOfList);
-        }
-        var firstCity = sequenceOfCitites.get(firstIndex);
-        sequenceOfCitites.set(firstIndex, sequenceOfCitites.get(secondIndex));
-        sequenceOfCitites.set(secondIndex, firstCity);
-        individual.setSequenceOfCities(sequenceOfCitites);
-        individual.calculateCost();
-        return individual;
-    }
+
 
     private List<Integer> inversionMutation(Individual individual){
         var sequenceOfCities = individual.getSequenceOfCities();
@@ -195,10 +180,11 @@ public class TSP {
 
 
     public void geneticAlgorithm(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize, String fileToSave){
+        //
         try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
             String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost"};
             writer.writeNext(headers);
-            generateRandomSequenceOfCities();
+            generateGreedySequenceOfCities();
             List<Individual> population = shuffleIndividuals(this.individuals,popSize);
             for (int i = 0; i < generations; i++) {
                 List<Individual> tournamentWinners = findTournamentWinners(population,popSize/10, tourSize);
@@ -252,6 +238,18 @@ public class TSP {
             throw new RuntimeException(e);
         }
     }
+
+    public void localSearch(Individual individual){
+        // 1. find neighbours and choose bestOne then do the same with best one - inversion, swap, insert????
+        // 2. when finds localOptimum cant escape from this
+        // 3. multiply start local serach????
+    }
+
+    public void simulatedAnnealingAlgorithm(Individual individual){
+
+    }
+
+
 
 
 
