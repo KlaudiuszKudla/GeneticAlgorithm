@@ -10,7 +10,7 @@ import java.util.Random;
 public class Individual implements IIndividual {
     private List<Integer> sequenceOfCities;
     private int cost;
-    private int[][] distanceMatrix;
+    private double[][] distanceMatrix;
     private int size;
 
     public void generateRandomSequenceOfCities(){
@@ -44,7 +44,7 @@ public class Individual implements IIndividual {
         }
 
     private Integer findNeighbourIndexWithLowestCost(int cityIndex, List<Integer> freeCities){
-        var lowestCost = Integer.MAX_VALUE;
+        var lowestCost = Double.MAX_VALUE;
         var neighbourIndexWithLowestCost = 0;
         for (int neighbourIndex: freeCities) {
             var currentCost = distanceMatrix[cityIndex][neighbourIndex];
@@ -86,9 +86,44 @@ public class Individual implements IIndividual {
         return mutant;
     }
 
-    public Individual(List<Integer> sequenceOfCities, int cost, int[][] distanceMatrix) {
+    public void swapMutationV2(){
+        var random = new Random();
+        var firstIndex = random.nextInt(size);
+        var secondIndex = random.nextInt(size);
+        while(firstIndex == secondIndex){
+            secondIndex = random.nextInt(size);
+        }
+        var firstCity = this.sequenceOfCities.get(firstIndex);
+        sequenceOfCities.set(firstIndex, sequenceOfCities.get(secondIndex));
+        sequenceOfCities.set(secondIndex, firstCity);
+        calculateCost();
+    }
+
+    public Individual inversionMutation(){
+        var random = new Random();
+        var firstIndex = random.nextInt(size);
+        var secondIndex = random.nextInt(size);
+        while(firstIndex == secondIndex){
+            secondIndex = random.nextInt(size);
+        }
+        Individual mutant = new Individual(distanceMatrix);
+        List<Integer> subsequence = new ArrayList<>(sequenceOfCities);
+        for (int i = firstIndex; i <= secondIndex; i++) {
+            subsequence.set(i, sequenceOfCities.get(secondIndex - (i - firstIndex)));
+        }
+        mutant.setSequenceOfCities(subsequence);
+        return mutant;
+    }
+
+    public Individual(List<Integer> sequenceOfCities, int cost, double[][] distanceMatrix) {
         this.sequenceOfCities = sequenceOfCities;
         this.cost = cost;
+        this.distanceMatrix = distanceMatrix;
+        this.size = distanceMatrix.length;
+    }
+
+    public Individual(List<Integer> sequenceOfCities, double[][] distanceMatrix) {
+        this.sequenceOfCities = sequenceOfCities;
         this.distanceMatrix = distanceMatrix;
         this.size = distanceMatrix.length;
     }
@@ -98,7 +133,7 @@ public class Individual implements IIndividual {
     }
 
 
-    public Individual(int[][] distanceMatrix) {
+    public Individual(double[][] distanceMatrix) {
         this.distanceMatrix = distanceMatrix;
         this.size = distanceMatrix.length;
     }
@@ -118,7 +153,7 @@ public class Individual implements IIndividual {
         return cost;
     }
 
-    public int[][] getDistanceMatrix() {
+    public double[][] getDistanceMatrix() {
         return distanceMatrix;
     }
 
