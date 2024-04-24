@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Random;
 
-public class EA extends TSP {
+public class GeneticAlghoritm extends TSP {
 
-    public EA(double[][] distanceMatrix) {
+    public GeneticAlghoritm(double[][] distanceMatrix) {
         super(distanceMatrix);
     }
 
@@ -69,7 +69,6 @@ public class EA extends TSP {
                 population.remove(worstResult);
             } else {
                 Individual worstResult = findWorstIndividual(population);
-                population.remove(worstResult);
                 population.remove(worstResult);
             }
             mutateIndividual(child, mutationProbability);
