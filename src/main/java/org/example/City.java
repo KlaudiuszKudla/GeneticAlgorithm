@@ -1,26 +1,9 @@
 package org.example;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-
 public class City {
 
     private int id;
     private double x;
     private double y;
-
-
-
-
-
-
-
-
-
-
-
 
     public City(int id, double x, double y) {
         this.id = id;

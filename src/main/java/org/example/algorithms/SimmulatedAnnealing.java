@@ -3,6 +3,7 @@ package org.example.algorithms;
 import com.opencsv.CSVWriter;
 import org.example.Individual;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class SimmulatedAnnealing {
     public void simulatedAnnealingAlgorithm(String fileToSave){
         var iteration = 0;
         // 1. find neighbours and choose bestOne then do the same with best one - inversion, swap, insert????
-        try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
+        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(fileToSave)))) {
             String[] headers = {"Iteracja", "CurrentCost","Best Result", "Worst Result", "Average Cost"};
             writer.writeNext(headers);
                 int bestResult = Integer.MAX_VALUE;
@@ -40,7 +41,7 @@ public class SimmulatedAnnealing {
                 long sum = 0;
                 List<Integer> costs = new ArrayList<>();
                 long average = 0;
-                for (int i = 0; i < 10_000_000; i++) {
+                for (int i = 0; i < 100; i++) {
                     Individual neighbour = this.individual.inversionMutation();
                     var neighbourCost = neighbour.getCost();
                     var individualCost = individual.getCost();
@@ -65,7 +66,7 @@ public class SimmulatedAnnealing {
     }
 
     public void simulatedAnnealingAlgorithmV2(String fileToSave) {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))) {
+        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(fileToSave)))) {
             String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost", "OdchylenieStandardowe"};
             writer.writeNext(headers);
             int bestResult = Integer.MAX_VALUE;
@@ -74,7 +75,7 @@ public class SimmulatedAnnealing {
             for (int j = 0; j < 10; j++) {
                 long sum = 0;
                 List<Integer> costs = new ArrayList<>();
-                for (int i = 0; i < 2_000_000; i++) {
+                for (int i = 0; i < 10_000; i++) {
                     Individual neighbour = this.individual.inversionMutation();
                     var neighbourCost = neighbour.getCost();
                     var individualCost = individual.getCost();

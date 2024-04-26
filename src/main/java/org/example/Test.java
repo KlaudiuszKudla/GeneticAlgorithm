@@ -1,9 +1,9 @@
 package org.example;
 
-import org.example.algorithms.EA;
+import org.example.algorithms.GeneticAlghoritm;
 import org.example.algorithms.Greedy;
 import org.example.algorithms.RandomAlgorithm;
-import org.example.algorithms.TA;
+import org.example.algorithms.SimmulatedAnnealing;
 import org.example.generators.DataFromFile;
 
 public class Test {
@@ -16,17 +16,17 @@ public class Test {
 //        double[][] distanceMatrix = dataFromFile.fetchDistanceMatrix("src/main/resources/bays29/bays29.tsp");
         double[][] distanceMatrix = dataFromFile.getDistanceMatrixByCords("src/main/resources/att48/att48.tsp");
 
-//        EA tsp = new EA(distanceMatrix);
-//        tsp.geneticAlgorithm(600, 50000, 70, 10, 16, "src/main/resources/att48/genetic/results2.csv");
+        GeneticAlghoritm tsp = new GeneticAlghoritm(distanceMatrix);
+//        tsp.geneticAlgorithmV2(120, 100, 70, 10, 13, "src/main/resources/att48/genetic/results1.csv");
 
 //        Greedy greedy = new Greedy(distanceMatrix);
-//        greedy.greedyAlgorithm("src/main/resources/u2319/greedy/results1.csv");
-
+//        greedy.greedyAlgorithm("src/main/resources/att48/greedy/results.csv");
+//
 //        RandomAlgorithm randomAlgorithm = new RandomAlgorithm(distanceMatrix);
-//        randomAlgorithm.randomAlgorithm("src/main/resources/p654/random/results1.csv", 10_000);
-
-        TA ta = new TA(distanceMatrix, 0.99, 0.99);
-        ta.simulatedAnnealingAlgorithm("src/main/resources/att48/TA/results1.csv");
+//        randomAlgorithm.randomAlgorithm("src/main/resources/att48/random/results.csv", 10_000);
+//
+        SimmulatedAnnealing ta = new SimmulatedAnnealing(distanceMatrix, 150_000, 0.99);
+        ta.simulatedAnnealingAlgorithm("src/main/resources/att48/SA/results1.csv");
 
 
 

@@ -19,21 +19,57 @@ public class GeneticAlghoritm extends TSP {
         try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
             String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost"};
             writer.writeNext(headers);
-//            for (int j = 0; j < 10; j++) {
+            var fitnessFucntionCounter = 0;
+            var worstResult = Integer.MIN_VALUE;
+            var averageCost = 0;
+            var counter = 0;
+
+            for (int j = 0; j < 10; j++) {
                 generateRandomSequenceOfCities(popSize);
                 List<Individual> population = shuffleIndividuals(this.individuals,popSize);
-                for (int i = 0; i < generations; i++) {
+                while (fitnessFucntionCounter < 10_000) {
                     List<Individual> tournamentWinners = findTournamentWinners(population,14, tourSize);
                     crossTournamentWinners(tournamentWinners, crossProbability, population, mutationProbability);
-//                mutatePopulation(population, mutationProbability);
-//                }
+                mutatePopulation(population, mutationProbability);
+                fitnessFucntionCounter += popSize;
+                var currentWorstResult = findWorstIndividual(population).getCost();
+                if (currentWorstResult> worstResult) worstResult=currentWorstResult;
+                averageCost += getAverageCost(population);
+                counter++;
+                }
+                var currentBestIndividual = findBestIndividual(population);
+                averageCost = averageCost/counter;
+
+                String[] row = {String.valueOf(j+1), String.valueOf(currentBestIndividual.getCost()), String.valueOf(worstResult), String.valueOf(averageCost)};
+                writer.writeNext(row);
+                fitnessFucntionCounter=0;
+                averageCost = 0;
+                counter = 0;
+                worstResult = 0;
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void geneticAlgorithmV2(int popSize, int generations, int crossProbability, int mutationProbability, int tourSize, String fileToSave){
+        //
+        try (CSVWriter writer = new CSVWriter(new FileWriter(fileToSave))){
+            String[] headers = {"Iteracja", "Best Result", "Worst Result", "Average Cost"};
+            writer.writeNext(headers);
+            generateRandomSequenceOfCities(popSize);
+            List<Individual> population = shuffleIndividuals(this.individuals,popSize);
+            for (int i = 0; i < 100; i++) {
+                List<Individual> tournamentWinners = findTournamentWinners(population,14, tourSize);
+                crossTournamentWinners(tournamentWinners, crossProbability, population, mutationProbability);
+                mutatePopulation(population, mutationProbability);
                 var currentBestIndividual = findBestIndividual(population);
                 var worstResult = findWorstIndividual(population).getCost();
                 var averageCost = getAverageCost(population);
                 String[] row = {String.valueOf(i+1), String.valueOf(currentBestIndividual.getCost()), String.valueOf(worstResult), String.valueOf(averageCost)};
                 writer.writeNext(row);
             }
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -50,16 +86,29 @@ public class GeneticAlghoritm extends TSP {
     }
 
     public void crossTournamentWinners(List<Individual> tournamentWinners, int crossProbability, List<Individual> population, int mutationProbability){
-        for (int j = 0; j < tournamentWinners.size() - 1; j += 2) {
-            Individual parent1 = tournamentWinners.get(j);
-            Individual parent2 = tournamentWinners.get(j + 1);
+        var sizeOfTournamentWinners = tournamentWinners.size();
+        Random random = new Random();
+        List<Individual> newPopulation = new ArrayList<>();
+        while (newPopulation.size() != population.size()) {
+            var randomIndex = random.nextInt(sizeOfTournamentWinners);
+            var secondRandomIndex = random.nextInt(sizeOfTournamentWinners);
+            Individual parent1 = tournamentWinners.get(randomIndex);
+            while(randomIndex == secondRandomIndex){
+                secondRandomIndex = random.nextInt(sizeOfTournamentWinners);
+            }
+            Individual parent2 = tournamentWinners.get(secondRandomIndex);
             if (shouldCross(crossProbability)) {
                 Individual child1 = orderedCrossover(parent1, parent2);
                 Individual child2 = orderedCrossover(parent2,parent1);
-                createNextGeneration(child1, parent1, parent2,population,mutationProbability);
-                createNextGeneration(child2, parent1, parent2,population,mutationProbability);
+                newPopulation.add(child1);
+                newPopulation.add(child2);
+            } else {
+                newPopulation.add(parent1);
+                newPopulation.add(parent2);
             }
         }
+        population.clear();
+        population.addAll(newPopulation);
     }
 
     private void createNextGeneration(Individual child, Individual parent1, Individual parent2, List<Individual> population, int mutationProbability){
